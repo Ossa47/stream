@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTA VI logo (fan style)</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syncopate:wght@700&display=swap');
+
+    :root {
+        --pink: #ff3d9a;
+        --orange: #ff8a3d;
+        --yellow: #ffd23d;
+        --purple: #7a2cff;
+    }
+
+    html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;   /* no background */
+        overflow: hidden;
+    }
+
+    .stage {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .logo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.2vw;
+        animation: reveal 1.6s cubic-bezier(0.19, 1, 0.22, 1) both,
+                   float 6s ease-in-out 1.6s infinite;
+    }
+
+    .word {
+        display: flex;
+        align-items: baseline;
+        gap: 2.4vw;
+        font-family: 'Bebas Neue', sans-serif;
+        line-height: 0.85;
+        letter-spacing: 0.04em;
+    }
+
+    .gta, .vi {
+        position: relative;
+        font-size: 24vw;
+        background: linear-gradient(100deg,
+            var(--yellow) 0%, var(--orange) 28%, var(--pink) 58%, var(--purple) 100%);
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 1.2vw rgba(255, 61, 154, 0.55))
+                drop-shadow(0 0 3vw rgba(122, 44, 255, 0.35));
+        animation: flow 7s linear infinite;
+    }
+
+    .vi {
+        animation-delay: -3s;
+    }
+
+    /* moving shine sweeping across the letters */
+    .gta::after, .vi::after {
+        content: attr(data-text);
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(105deg,
+            transparent 40%, rgba(255, 255, 255, 0.9) 50%, transparent 60%);
+        background-size: 250% 100%;
+        background-position: 150% 0;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+        animation: shine 5s ease-in-out 2s infinite;
+    }
+
+    .tag {
+        font-family: 'Syncopate', sans-serif;
+        font-size: 1.7vw;
+        letter-spacing: 1.2em;
+        padding-left: 1.2em;
+        color: #fff;
+        text-shadow: 0 0 1vw var(--pink);
+        opacity: 0.9;
+        animation: fade 2.2s ease-out 0.8s both;
+    }
+
+    .line {
+        width: 38vw;
+        height: 0.35vw;
+        border-radius: 1vw;
+        background: linear-gradient(90deg, transparent, var(--pink), var(--orange), transparent);
+        box-shadow: 0 0 1.2vw var(--pink);
+        animation: grow 1.6s cubic-bezier(0.19, 1, 0.22, 1) 0.5s both;
+    }
+
+    @keyframes reveal {
+        0%   { opacity: 0; transform: scale(0.82) translateY(2vw); filter: blur(1.4vw); }
+        100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50%      { transform: translateY(-0.8vw); }
+    }
+    @keyframes flow {
+        0%   { background-position: 0% 0; }
+        100% { background-position: 200% 0; }
+    }
+    @keyframes shine {
+        0%, 55% { background-position: 150% 0; }
+        100%    { background-position: -50% 0; }
+    }
+    @keyframes fade {
+        from { opacity: 0; letter-spacing: 0.6em; }
+        to   { opacity: 0.9; letter-spacing: 1.2em; }
+    }
+    @keyframes grow {
+        from { transform: scaleX(0); opacity: 0; }
+        to   { transform: scaleX(1); opacity: 1; }
+    }
+</style>
+</head>
+<body>
+<div class="stage">
+    <div class="logo">
+        <div class="word">
+            <span class="gta" data-text="GTA">GTA</span>
+            <span class="vi" data-text="VI">VI</span>
+        </div>
+        <div class="line"></div>
+        <div class="tag">VICE CITY</div>
+    </div>
+</div>
+</body>
+</html>
