@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<!-- saved from url=(0103)https://elements.meldstudio.co/76411e2e74604187b9c6f0d0a39449e4/bz348cjkx7rslmof/gta6-camera-frame.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>Vice City — Camera Frame</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com/">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+  <link href="./Vice City — Camera Frame_files/css2" rel="stylesheet">
+  <style>
+    /* DESIGN
+       subject:  live-camera frame for the segments between cutscenes
+       words:    ON CAM, LIVE FROM VICE CITY
+       object:   GTA 6 style character card: plum glass window, hot-pink hairline,
+                 amber corner tabs, sun-strip plate beneath the camera
+       ground:   transparent overlay — the camera layer sits under the window cut-out
+       color:    #ff2a85 hot pink / #ff7a18 coral / #ffc247 amber / #ffe57f sun gold /
+                 #1a0730 night plum / #f4ecff white
+       type:     Righteous display + Rubik
+       size:     window 30% of width, portrait; strip text 2vh
+       motion:   card settles once on load; ON CAM dot breathes — the only loop
+    */
+
+    :root {
+      --pink: #ff2a85;
+      --coral: #ff7a18;
+      --amber: #ffc247;
+      --sun: #ffe57f;
+      --plum: #1a0730;
+      --body: #f4ecff;
+      --font-display: 'Righteous', 'Rubik', sans-serif;
+      --font-sub: 'Rubik', sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: var(--font-sub);
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    /* corner darkening keeps the camera card readable over bright footage */
+    .vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(110% 85% at 78% 42%, rgba(0,0,0,0) 30%, rgba(10, 2, 22, 0.32) 68%, rgba(10, 2, 22, 0.62) 100%);
+      opacity: 0;
+      animation: fadeIn 1.6s ease-out 0.1s forwards;
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    /* ── camera card ───────────────────────────────────────── */
+    .cam {
+      position: absolute;
+      left: 3.5%;
+      bottom: 5.5%;
+      width: 28%;
+      aspect-ratio: 4 / 5;
+      max-height: 78%;
+      display: flex;
+      flex-direction: column;
+      border-radius: 1.4vh;
+      border: 0.32vh solid var(--pink);
+      background: var(--plum);
+      box-shadow:
+        0 0 0 0.3vh rgba(255, 42, 133, 0.18),
+        0 2.2vh 4.4vh rgba(6, 0, 16, 0.55);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(3.5vh);
+      animation: camIn 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+    }
+    @keyframes camIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* transparent window: the camera layer beneath shows through */
+    .cam-window {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      background:
+        repeating-linear-gradient(-45deg, rgba(255, 42, 133, 0.045) 0 1.4vh, transparent 1.4vh 2.8vh),
+        linear-gradient(180deg, rgba(123, 31, 162, 0.22), rgba(255, 122, 24, 0.08));
+    }
+
+    .tab {
+      position: absolute;
+      width: 3.6vh;
+      height: 3.6vh;
+      border: 0.42vh solid var(--amber);
+    }
+    .tab.tl { top: 1.1vh; left: 1.1vh; border-right: none; border-bottom: none; }
+    .tab.tr { top: 1.1vh; right: 1.1vh; border-left: none; border-bottom: none; }
+    .tab.bl { bottom: 1.1vh; left: 1.1vh; border-right: none; border-top: none; }
+    .tab.br { bottom: 1.1vh; right: 1.1vh; border-left: none; border-top: none; }
+
+    .cam-status {
+      position: absolute;
+      top: 2vh;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 0.6em;
+      padding: 0.3em 0.9em 0.35em;
+      border-radius: 999px;
+      background: rgba(10, 2, 20, 0.85);
+      border: 0.2vh solid var(--pink);
+      font-family: var(--font-display);
+      font-size: clamp(10px, 1.8vh, 30px);
+      letter-spacing: 0.15em;
+      color: #fff;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .cam-dot {
+      width: 0.65em;
+      height: 0.65em;
+      border-radius: 50%;
+      background: var(--pink);
+      box-shadow: 0 0 0.7em var(--pink);
+      animation: breathe 1.8s ease-in-out infinite;
+      flex: none;
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .cam-plate {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15em;
+      padding: 0.7em 1.1em 1em;
+      background: linear-gradient(90deg, #1a0730, #3f0e4e);
+      border-top: 0.32vh solid var(--pink);
+    }
+    .cam-plate::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 0.7vh;
+      background: repeating-linear-gradient(-55deg, var(--sun) 0 0.55vh, var(--coral) 0.55vh 1.1vh, var(--pink) 1.1vh 1.65vh);
+    }
+
+    .cam-plate-title {
+      font-family: var(--font-display);
+      font-size: clamp(12px, 2.5vh, 44px);
+      letter-spacing: 0.05em;
+      line-height: 1;
+      color: #fff;
+      text-shadow: 0.09em 0.09em 0 var(--pink);
+      text-transform: uppercase;
+    }
+
+    .cam-plate-sub {
+      font-weight: 800;
+      font-style: italic;
+      font-size: clamp(10px, 1.9vh, 32px);
+      letter-spacing: 0.06em;
+      color: var(--sun);
+      text-transform: uppercase;
+      opacity: 0.92;
+    }
+  </style>
+</head>
+<body>
+  <div class="vignette"></div>
+
+  <div class="cam">
+    <div class="cam-window">
+      <span class="tab tl"></span><span class="tab tr"></span>
+      <span class="tab bl"></span><span class="tab br"></span>
+      <div class="cam-status"><span class="cam-dot"></span>ON CAM</div>
+    </div>
+    <div class="cam-plate">
+      <span class="cam-plate-title">Live from Vice City</span>
+      <span class="cam-plate-sub">talking to chat</span>
+    </div>
+  </div>
+
+
+</body></html>

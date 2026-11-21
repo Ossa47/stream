@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live box</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Syncopate:wght@700&display=swap');
+
+    :root { --pink: #ff2d8f; --yellow: #ffc21a; }
+
+    html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
+        font-family: 'JetBrains Mono', monospace;
+        color: #fff;
+    }
+
+    .box {
+        position: relative;
+        box-sizing: border-box;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2.2vh;
+        border: 0.5vh solid var(--pink);
+        border-radius: 3vh;
+        background: linear-gradient(160deg, rgba(60, 10, 70, 0.85), rgba(20, 5, 30, 0.9));
+        box-shadow: 0 0 3vh rgba(255, 45, 143, 0.35) inset;
+    }
+
+    .live {
+        display: flex;
+        align-items: center;
+        gap: 1.6vw;
+        font-family: 'Syncopate', sans-serif;
+        font-size: 7vh;
+        letter-spacing: 0.3em;
+    }
+
+    .dot {
+        width: 7vh;
+        height: 7vh;
+        border-radius: 50%;
+        background: #ff2a2a;
+        box-shadow: 0 0 2.5vh #ff2a2a;
+        animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(0.65); opacity: 0.45; }
+    }
+
+    .clock {
+        font-size: 17vh;
+        font-variant-numeric: slashed-zero;
+        text-shadow: 0 0 2vh rgba(255, 45, 143, 0.7);
+    }
+
+    .row {
+        display: flex;
+        gap: 4vw;
+        font-size: 6.5vh;
+        color: var(--yellow);
+    }
+
+    .msg {
+        font-size: 6vh;
+        opacity: 0.85;
+        transition: opacity 0.5s ease;
+    }
+
+    .stripe {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        height: 1.6vh;
+        border-radius: 0 0 2.5vh 2.5vh;
+        background: repeating-linear-gradient(135deg, var(--yellow) 0 1.2vh, var(--pink) 1.2vh 2.4vh);
+    }
+</style>
+</head>
+<body>
+<div class="box">
+    <div class="live"><span class="dot"></span><span>LIVE</span></div>
+    <div id="clock" class="clock">00:00:00</div>
+    <div class="row">
+        <span>UPTIME <span id="uptime">00:00:00</span></span>
+    </div>
+    <div id="msg" class="msg">Talking to chat</div>
+    <div class="stripe"></div>
+</div>
+
+<script>
+    // ---- Settings you can change ----
+    const messages = [
+        'Talking to chat',
+        'Drop a follow',
+        'Say hi in chat',
+        'Vice City, live'
+    ];
+    // ----------------------------------
+
+    const clock = document.getElementById('clock');
+    const uptime = document.getElementById('uptime');
+    const msg = document.getElementById('msg');
+    const start = Date.now();
+    const two = n => String(n).padStart(2, '0');
+
+    function tick() {
+        const now = new Date();
+        clock.textContent = two(now.getHours()) + ':' + two(now.getMinutes()) + ':' + two(now.getSeconds());
+        const s = Math.floor((Date.now() - start) / 1000);
+        uptime.textContent = two(Math.floor(s / 3600)) + ':' + two(Math.floor(s / 60) % 60) + ':' + two(s % 60);
+    }
+    tick();
+    setInterval(tick, 1000);
+
+    let i = 0;
+    setInterval(() => {
+        msg.style.opacity = 0;
+        setTimeout(() => {
+            i = (i + 1) % messages.length;
+            msg.textContent = messages[i];
+            msg.style.opacity = 0.85;
+        }, 500);
+    }, 5000);
+</script>
+</body>
+</html>

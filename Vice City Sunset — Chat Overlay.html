@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<!-- saved from url=(0095)https://elements.meldstudio.co/76411e2e74604187b9c6f0d0a39449e4/jd7lyf2ltv2d4i6n/gta6-chat.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>Vice City Sunset — Chat Overlay</title>
+  <script src="./Vice City Sunset — Chat Overlay_files/firehose.js.download"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com/">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+  <link href="./Vice City Sunset — Chat Overlay_files/css2" rel="stylesheet">
+  <style>
+    /* DESIGN
+       subject:  Vice City chat widget — postcard sunset palette, neon signage
+       words:    VICE CHAT, viewer names in caps, message body, platform tag
+       object:   frosted plum panel with a hot-pink hairline frame and a sun-strip header
+       ground:   transparent — sits over game footage in the lower corner
+       color:    #ff2a85 hot pink / #ff7a18 sunset coral / #ffc247 amber / #ffe57f sun gold /
+                 #1a0730 night plum / #f4ecff body white
+       type:     Righteous display + Rubik (900 italic names, 500 body)
+       size:     panel 34% of canvas width, up to 88% tall; names 3.4% height; body 3.5% height
+       motion:   staggered message entry (lift + fade), sun-strip shimmer in header,
+                 mirror-flip on a 3-message cadence — those three loops are the only repeats
+       layout:   tall chat column, newest at the bottom, older messages fading upward
+    */
+
+    :root {
+      --pink: #ff2a85;
+      --coral: #ff7a18;
+      --amber: #ffc247;
+      --sun: #ffe57f;
+      --plum: #1a0730;
+      --body: #f4ecff;
+
+      --font-display: 'Righteous', 'Rubik', sans-serif;
+      --font-sub: 'Rubik', sans-serif;
+
+      --panel-w: 34%;
+      --panel-min-w: 340px;
+      --panel-max-h: 88%;
+      --edge: 2.4vh;
+      --gap: 0.9vh;
+      --pad: 1.4vh;
+      --radius: 1.4vh;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: var(--font-sub);
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    .chat-wrapper {
+      position: absolute;
+      right: 2.6%;
+      bottom: 3.2%;
+      width: clamp(var(--panel-min-w), var(--panel-w), 62vw);
+      max-height: var(--panel-max-h);
+      display: flex;
+      flex-direction: column;
+      filter: drop-shadow(0 1.4vh 2.4vh rgba(8, 0, 20, 0.55));
+      opacity: 0;
+      transform: translateY(2.4vh);
+      animation: wrapperIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+    }
+
+    @keyframes wrapperIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── header ─────────────────────────────────────────────── */
+    .chat-header {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1em;
+      padding: 1em 1.4em 1.1em;
+      background:
+        linear-gradient(180deg, rgba(255, 42, 133, 0.22), rgba(255, 42, 133, 0) 62%),
+        linear-gradient(90deg, #2a0a44, #4a1050 62%, #6a1436);
+      border: 0.22vh solid var(--pink);
+      border-bottom: none;
+      border-radius: var(--radius) var(--radius) 0 0;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    /* sun-strip band across the header, mirrored flip */
+    .chat-header::before {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 0.9vh;
+      background: repeating-linear-gradient(
+        -55deg,
+        var(--sun) 0 0.55vh,
+        var(--coral) 0.55vh 1.1vh,
+        var(--pink) 1.1vh 1.65vh
+      );
+      animation: strip 2.6s steps(6) infinite;
+      opacity: 0.95;
+    }
+
+    @keyframes strip {
+      0%, 40% { transform: scaleX(1); }
+      50%, 90% { transform: scaleX(-1); }
+      100% { transform: scaleX(1); }
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 0.7em;
+      font-family: var(--font-display);
+      font-size: clamp(16px, 3.4vh, 60px);
+      letter-spacing: 0.07em;
+      line-height: 1;
+      color: #fff;
+      text-transform: uppercase;
+      text-shadow:
+        0.09em 0.09em 0 var(--pink),
+        0 0 1.4em rgba(255, 42, 133, 0.55);
+    }
+
+    .header-dot {
+      width: 0.55em;
+      height: 0.55em;
+      border-radius: 50%;
+      background: var(--sun);
+      box-shadow: 0 0 0.6em var(--amber), 0 0 1.4em rgba(255, 194, 71, 0.7);
+      flex: none;
+    }
+
+    .header-count {
+      font-family: var(--font-display);
+      font-size: clamp(14px, 2.8vh, 48px);
+      line-height: 1;
+      color: var(--sun);
+      letter-spacing: 0.02em;
+      min-width: 2.4ch;
+      text-align: right;
+      visibility: hidden;
+    }
+
+    .header-count.on { visibility: visible; }
+
+    /* ── message column ─────────────────────────────────────── */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: var(--gap);
+      padding: var(--pad);
+      background:
+        linear-gradient(180deg, rgba(123, 31, 162, 0.32), rgba(26, 7, 48, 0.9) 55%),
+        rgba(18, 4, 34, 0.88);
+      border: 0.22vh solid var(--pink);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      backdrop-filter: blur(10px) saturate(1.15);
+      box-shadow: inset 0 0 3vh rgba(255, 42, 133, 0.14);
+      min-height: 16em;
+      overflow: hidden;
+    }
+
+    .message {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15em;
+      padding: 0.6em 1em 0.7em;
+      background: linear-gradient(90deg, rgba(10, 2, 20, 0.82), rgba(10, 2, 20, 0.48));
+      border-left: 0.5vh solid var(--pink);
+      border-radius: 0.4vh 0.9vh 0.9vh 0.4vh;
+      opacity: 0;
+      animation: msgIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* staggered slots: newest enters and everything shuffles up */
+    .message[data-slot="1"] { animation-delay: 0.06s; border-left-color: var(--coral); }
+    .message[data-slot="2"] { animation-delay: 0.12s; border-left-color: var(--amber); opacity: 0.96; }
+    .message[data-slot="3"] { animation-delay: 0.17s; border-left-color: var(--pink); opacity: 0.9; }
+    .message[data-slot="4"] { animation-delay: 0.21s; border-left-color: #b03a9c; opacity: 0.78; }
+    .message[data-slot="5"] { animation-delay: 0.24s; border-left-color: #7b1fa2; opacity: 0.6; }
+
+    @keyframes msgIn {
+      0% { opacity: 0; transform: translateY(1.6vh) scale(0.99); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    /* oldest message at the top pales out on the way off */
+    .message.leaving {
+      opacity: 0 !important;
+      transform: translateX(2vw) !important;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .msg-header {
+      display: flex;
+      align-items: center;
+      gap: 0.55em;
+      min-width: 0;
+    }
+
+    .msg-name {
+      font-weight: 900;
+      font-style: italic;
+      font-size: clamp(15px, 3.4vh, 60px);
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+      color: var(--sun);
+      text-shadow: 0.06em 0.06em 0 rgba(0, 0, 0, 0.85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 0 1 auto;
+    }
+
+    .msg-badge {
+      font-family: var(--font-sub);
+      font-weight: 800;
+      font-size: clamp(11px, 2vh, 34px);
+      letter-spacing: 0.1em;
+      color: var(--pink);
+      background: rgba(255, 42, 133, 0.16);
+      border: 0.12em solid rgba(255, 42, 133, 0.5);
+      border-radius: 0.8em;
+      padding: 0.08em 0.55em;
+      text-transform: uppercase;
+      flex: none;
+    }
+
+    .msg-body {
+      font-size: clamp(15px, 3.5vh, 62px);
+      font-weight: 500;
+      line-height: 1.3;
+      color: var(--body);
+      text-shadow: 0 0.1vh 0.25vh rgba(0, 0, 0, 0.9);
+      word-break: break-word;
+    }
+
+    .msg-body .emote,
+    .msg-body img {
+      height: 1.35em;
+      vertical-align: middle;
+      display: inline-block;
+      margin: 0 0.1em;
+    }
+
+    .msg-body a { color: var(--amber); text-decoration: none; }
+
+    /* a streamer's message gets the full neon treatment */
+    .message.authority { background: linear-gradient(90deg, rgba(255, 42, 133, 0.3), rgba(10, 2, 20, 0.5)); }
+    .message.authority .msg-name { color: #fff; text-shadow: 0.06em 0.06em 0 var(--pink), 0 0 1em rgba(255, 42, 133, 0.7); }
+
+    .donation {
+      display: inline-block;
+      font-weight: 800;
+      font-size: 0.82em;
+      color: var(--plum);
+      background: linear-gradient(90deg, var(--sun), var(--amber));
+      border-radius: 0.5em;
+      padding: 0.04em 0.45em;
+      margin-right: 0.4em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chat-wrapper">
+    <div class="chat-header">
+      <span class="header-title"><span class="header-dot"></span>VICE CHAT</span>
+      <span class="header-count" id="count"></span>
+    </div>
+    <div class="chat-container" id="chat"></div>
+  </div>
+
+  <script>
+    /* ── sound: layered noise tick, one bus, reverb tail ─────── */
+    const ctx = new AudioContext();
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -10; limiter.ratio.value = 12; limiter.attack.value = 0.003;
+    const master = ctx.createGain(); master.gain.value = 0.8; master.connect(limiter).connect(ctx.destination);
+    function impulse(seconds, decay) {
+      const n = ctx.sampleRate * seconds, buf = ctx.createBuffer(2, n, ctx.sampleRate);
+      for (let c = 0; c < 2; c++) buf.getChannelData(c).forEach((_, i, d) => (d[i] = (Math.random() * 2 - 1) * (1 - i / n) ** decay));
+      return buf;
+    }
+    const reverb = ctx.createConvolver(); reverb.buffer = impulse(1.1, 3.5);
+    const wet = ctx.createGain(); wet.gain.value = 0.16; reverb.connect(wet).connect(master);
+    const bus = ctx.createGain(); bus.connect(master); bus.connect(reverb);
+    const NOISE = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    NOISE.getChannelData(0).forEach((_, i, d) => (d[i] = Math.random() * 2 - 1));
+    const env = (p, t, peak, attack, decay) => { p.setValueAtTime(0.0001, t); p.exponentialRampToValueAtTime(peak, t + attack); p.exponentialRampToValueAtTime(0.0001, t + attack + decay); };
+    const vary = (v, amount = 0.1) => v * (1 + (Math.random() * 2 - 1) * amount);
+
+    function tick(t, { vol = 0.08, freq = 5000, out = bus } = {}) {
+      const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = NOISE; f.type = 'highpass'; f.frequency.value = freq;
+      env(g.gain, t, vary(vol), 0.001, 0.03);
+      s.connect(f).connect(g).connect(out); s.start(t, Math.random()); s.stop(t + 0.06); s.onended = () => g.disconnect();
+    }
+    function pluck(t, freq, { decay = 0.28, vol = 0.1 } = {}) {
+      const f = ctx.createBiquadFilter(), g = ctx.createGain(); f.type = 'lowpass';
+      f.frequency.setValueAtTime(2600, t); f.frequency.exponentialRampToValueAtTime(400, t + decay);
+      env(g.gain, t, vary(vol), 0.005, decay); f.connect(g).connect(bus);
+      [-7, 7].forEach((cents, i) => {
+        const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = freq; o.detune.value = cents;
+        o.connect(f); o.start(t); o.stop(t + decay + 0.1); if (i) o.onended = () => g.disconnect();
+      });
+    }
+
+    let lastChat = 0;
+    function chatSound() {
+      const now = performance.now();
+      if (now - lastChat < 250) return;
+      lastChat = now;
+      const t = ctx.currentTime + 0.01;
+      tick(t, { vol: 0.04, freq: 3500 + Math.random() * 2500 });
+      pluck(t + 0.02, 300 + Math.random() * 120, { decay: 0.14, vol: 0.035 });
+    }
+
+    /* ── chat renderer ──────────────────────────────────────── */
+    const MAX_MESSAGES = 16;
+    const FADE_FROM = 3; // slots older than this fade toward the top of the column
+    const container = document.getElementById("chat");
+    const countEl = document.getElementById("count");
+    let total = 0;
+
+    function renderText(msg) {
+      const span = document.createElement("span");
+      if (msg.fragments) {
+        for (const frag of msg.fragments) {
+          if (frag.type === "EMOTE" && frag.html) { const s = document.createElement("span"); s.innerHTML = frag.html; span.appendChild(s); }
+          else if (frag.type === "EMOTE" && frag.imageLink) { const img = document.createElement("img"); img.src = frag.imageLink; img.alt = frag.raw; img.className = "emote"; span.appendChild(img); }
+          else span.appendChild(document.createTextNode(frag.raw ?? ""));
+        }
+      } else if (msg.html) span.innerHTML = msg.html;
+      else span.textContent = msg.raw ?? "";
+      for (const attachment of msg.attachments ?? []) { const s = document.createElement("span"); s.innerHTML = attachment.html; span.appendChild(s); }
+      return span;
+    }
+
+    function donationLabel(d) {
+      const amount = (d.amount ?? 0) * (d.count ?? 1);
+      const pseudo = typeof d.currency === "string" && d.currency.includes("_");
+      const value = pseudo ? `${amount} ${(d.name || d.currency.replace(/_/g, " ")).toLowerCase()}` :
+        (() => { try { return new Intl.NumberFormat(undefined, { style: "currency", currency: d.currency }).format(amount); } catch { return `${amount} ${d.currency}`; } })();
+      return value;
+    }
+
+    function relayout() {
+      const nodes = [...container.children];
+      const n = nodes.length;
+      nodes.forEach((el, i) => {
+        const slot = n - i;              // 1 = newest, grows toward the top
+        el.dataset.slot = String(Math.min(slot, FADE_FROM + 2));
+        // older messages fade out gradually so the column reads top-down
+        el.style.opacity = slot <= FADE_FROM ? "" :
+          String(Math.max(0.18, 0.88 - (slot - FADE_FROM) * 0.07));
+      });
+      // keep the newest in view when the column is taller than its frame
+      container.scrollTop = container.scrollHeight;
+      countEl.textContent = String(total);
+      countEl.classList.toggle("on", total > 0);
+    }
+
+    function removeMessage(el) {
+      el.classList.add("leaving");
+      setTimeout(() => el.remove(), 300);
+      relayout();
+    }
+
+    const firehose = new Firehose({
+      scenarios: [
+        {
+          version: 1, id: "vice-hello", name: "One message",
+          sequence: [
+            { tool: "simulateEvent", input: { type: "chat", username: "ViceRider", chatMessage: "Cruising down Ocean Drive tonight 🌴", platform: "TWITCH" } },
+            { waitMs: 1500 }
+          ]
+        },
+        {
+          version: 1, id: "vice-conversation", name: "Chat filling up",
+          sequence: [
+            { tool: "simulateEvent", input: { type: "chat", username: "NeonKitten", chatMessage: "the sunset skyline is unreal", platform: "TWITCH" } },
+            { waitMs: 900 },
+            { tool: "simulateEvent", input: { type: "chat", username: "Speedy80s", chatMessage: "when does the broadcast start? 🇺🇸", platform: "KICK" } },
+            { waitMs: 900 },
+            { tool: "simulateEvent", input: { type: "chat", username: "MiamiHeat_05", chatMessage: "that drift into the beach was chef's kiss 😚👌", platform: "YOUTUBE" } },
+            { waitMs: 1500 }
+          ]
+        },
+        {
+          version: 1, id: "vice-long", name: "Wrapping message",
+          sequence: [
+            { tool: "simulateEvent", input: { type: "chat", username: "PalmTreePete", chatMessage: "A much longer message to show how the panel wraps several lines of text without ever growing past the height it was designed for." } },
+            { waitMs: 1500 }
+          ]
+        }
+      ]
+    });
+
+    firehose.on("chat", (msg) => {
+      const el = document.createElement("div");
+      el.className = "message";
+      if (msg.meta_id) el.dataset.metaId = msg.meta_id;
+      el.dataset.senderUpid = msg.sender?.UPID ?? "";
+      if ((msg.sender?.roles ?? []).includes("BROADCASTER")) el.classList.add("authority");
+
+      const headerRow = document.createElement("div");
+      headerRow.className = "msg-header";
+
+      const who = document.createElement("span");
+      who.className = "msg-name";
+      who.textContent = msg.sender?.displayname ?? msg.sender?.username ?? "Someone";
+      if (msg.sender?.color && !el.classList.contains("authority")) who.style.color = msg.sender.color;
+      headerRow.appendChild(who);
+
+      if (msg.sender?.platform) {
+        const badge = document.createElement("span");
+        badge.className = "msg-badge";
+        badge.textContent = msg.sender.platform === "X" ? "X" : msg.sender.platform;
+        headerRow.appendChild(badge);
+      }
+
+      const body = document.createElement("div");
+      body.className = "msg-body";
+      for (const d of msg.donations ?? []) {
+        const label = document.createElement("span");
+        label.className = "donation";
+        label.textContent = donationLabel(d);
+        body.appendChild(label);
+      }
+      body.appendChild(renderText(msg));
+
+      el.append(headerRow, body);
+      container.appendChild(el);
+      total += 1;
+      chatSound();
+
+      while (container.children.length > MAX_MESSAGES) {
+        const oldest = container.firstElementChild;
+        oldest.classList.add("leaving");
+        setTimeout(() => oldest.remove(), 300);
+        break;
+      }
+      relayout();
+    });
+
+    firehose.on("meta", (meta) => {
+      if (meta.is_visible) return;
+      const el = container.querySelector(`[data-meta-id="${CSS.escape(meta.meta_id)}"]`);
+      if (el) removeMessage(el);
+    });
+
+    firehose.on("clearchat", (e) => {
+      if (e.clear_type === "ALL") {
+        [...container.children].forEach(removeMessage);
+      } else {
+        container.querySelectorAll(`[data-sender-upid="${CSS.escape(e.user_upid ?? "")}"]`).forEach(removeMessage);
+      }
+    });
+  </script>
+
+
+</body></html>
