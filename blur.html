@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Censor Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800&display=swap" rel="stylesheet">
 <style>
   /* Transparent when off, so the browser source shows nothing on stream. */
   html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
@@ -54,14 +57,19 @@
 
   .card {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-    text-align: center; color: #fff; padding: 3vmin 6vmin;
+    text-align: center; color: #fff; padding: calc(3vmin * var(--scale, 1)) calc(6vmin * var(--scale, 1));
     background: rgba(10, 4, 18, .45); border: 1px solid rgba(255,255,255,.18);
     border-radius: 3vmin; backdrop-filter: blur(6px);
     box-shadow: 0 2vmin 6vmin rgba(0,0,0,.45);
+    font-family: var(--font, "Segoe UI", system-ui, sans-serif); max-width: 90vw;
   }
-  .title { font-size: 7vmin; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+  .title { font-size: calc(7vmin * var(--scale, 1)); font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
     text-shadow: 0 0 3vmin var(--c2); }
-  .sub { margin-top: 1.2vmin; font-size: 3vmin; opacity: .85; letter-spacing: .04em; }
+  .sub { margin-top: 1.2vmin; font-size: calc(3vmin * var(--scale, 1)); opacity: .85; letter-spacing: .04em; }
+  /* Arabic: letter spacing breaks the joined letters, so turn it off and go right-to-left. */
+  .card.rtl { direction: rtl; }
+  .card.rtl .title, .card.rtl .sub { letter-spacing: 0; text-transform: none; font-weight: 700; }
+  .card.rtl .title { line-height: 1.35; }
   .card.hidden { display: none; }
 
   /* Setup page (?setup=1): pick a style and copy the link. Never shown on stream. */
@@ -80,7 +88,7 @@
   @keyframes walk { from { left: 55%; } to { left: 75%; } }
   .panel { display: grid; gap: 14px; align-content: start; }
   .panel label { display: grid; gap: 6px; font-size: 13px; color: #bbb; }
-  .panel input[type=text] { background: #1c1526; color: #fff; border: 1px solid #3a2d4d; border-radius: 8px; padding: 8px 10px; font: inherit; }
+  .panel input[type=text], .panel select { background: #1c1526; color: #fff; border: 1px solid #3a2d4d; border-radius: 8px; padding: 8px 10px; font: inherit; }
   .styles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .styles button { background: #1c1526; color: #eee; border: 1px solid #3a2d4d; border-radius: 8px; padding: 10px; font: inherit; cursor: pointer; }
   .styles button.active { border-color: #ff2d95; background: #2a1736; }
@@ -106,13 +114,21 @@
   </div>
 </div>
 <script>
-  // URL options, e.g. index.html?style=glass&op=0.85&text=Censored&sub=
+  // URL options, e.g. blur.html?style=glass&op=0.85&text=Censored&sub=
   //   style: frost (default) | mosaic | black | glass
   //   op: glass darkness 0.5-0.98 (default 0.85; higher hides more)
   //   text / sub: card text (empty sub hides it; text=none hides the card)
+  //   font: default | cairo (Cairo Bold, from Google Fonts) | dubai (Dubai Bold, built into Windows)
+  //   size: text size 0.5-2.5 (default 1)
   //   c1 c2 c3: blob/mosaic colors
-  //   setup=1: open the style picker instead of the overlay
+  //   setup=1: open the style picker instead of the overlay (keeps the other options as a starting point)
   const q = new URLSearchParams(location.search);
+  const FONTS = {
+    default: '"Segoe UI", system-ui, sans-serif',
+    cairo: '"Cairo", "Segoe UI", sans-serif',
+    dubai: '"Dubai", "Cairo", "Segoe UI", sans-serif',
+  };
+  const isArabic = s => /[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]/.test(s);
 
   if (q.get('setup') === '1') {
     buildSetup();
@@ -128,6 +144,8 @@
     root.setProperty('--c3', q.get('c3') || '#2d6bff');
     const op = Math.min(.98, Math.max(.5, parseFloat(q.get('op')) || .85));
     root.setProperty('--op', op);
+    root.setProperty('--scale', Math.min(2.5, Math.max(.5, parseFloat(q.get('size')) || 1)));
+    root.setProperty('--font', FONTS[q.get('font')] || FONTS.default);
 
     const style = q.get('style') || 'frost';
     cover.classList.add(style);
@@ -140,6 +158,8 @@
       sub.textContent = q.get('sub');
       sub.style.display = q.get('sub') ? '' : 'none';
     }
+    const card = document.getElementById('card');
+    if (isArabic(card.textContent)) card.classList.add('rtl');
 
     // Mosaic: low-res random tiles in the theme colors, redrawn a few times a second.
     if (style === 'mosaic') {
@@ -179,8 +199,15 @@
           </div>
           <label id="opWrap">Glass darkness: <span id="opVal"></span>
             <input type="range" id="op" min="0.5" max="0.98" step="0.01" value="0.85"></label>
-          <label>Big text (empty = no card)<input type="text" id="text" value="Scene Skipped"></label>
-          <label>Small text (empty = hidden)<input type="text" id="sub" value="Back in a moment"></label>
+          <label>Big text (empty = no card)<input type="text" id="text" dir="auto" value="Scene Skipped"></label>
+          <label>Small text (empty = hidden)<input type="text" id="sub" dir="auto" value="Back in a moment"></label>
+          <label>Font<select id="font">
+            <option value="default">Default (Segoe UI)</option>
+            <option value="cairo">Cairo Bold</option>
+            <option value="dubai">Dubai Bold</option>
+          </select></label>
+          <label>Text size: <span id="sizeVal"></span>
+            <input type="range" id="size" min="0.5" max="2.5" step="0.1" value="1"></label>
           <label>Colors<span class="colors">
             <input type="color" id="c1" value="#7b2cff"><input type="color" id="c2" value="#ff2d95"><input type="color" id="c3" value="#2d6bff"></span></label>
         </div>
@@ -193,25 +220,39 @@
     const base = location.href.split(/[?#]/)[0];
     let style = q.get('style') || 'frost';
 
+    // Start from the link it was opened with, so an existing link can be edited.
+    if (q.has('op')) $('op').value = q.get('op');
+    if (q.has('text')) $('text').value = q.get('text') === 'none' ? '' : q.get('text');
+    if (q.has('sub')) $('sub').value = q.get('sub');
+    if (q.has('font') && FONTS[q.get('font')]) $('font').value = q.get('font');
+    if (q.has('size')) $('size').value = q.get('size');
+    for (const k of ['c1', 'c2', 'c3']) if (q.has(k)) $(k).value = q.get(k);
+
+    // Keep Arabic readable in the link: only encode the characters that would break it.
+    const enc = s => s.replace(/[%&#+?=\s]/g, c => c === ' ' ? '%20' : encodeURIComponent(c));
+
     const update = () => {
-      const p = new URLSearchParams();
-      if (style !== 'frost') p.set('style', style);
-      if (style === 'glass' && $('op').value !== '0.85') p.set('op', $('op').value);
+      const p = [];
+      if (style !== 'frost') p.push(['style', style]);
+      if (style === 'glass' && $('op').value !== '0.85') p.push(['op', $('op').value]);
       const text = $('text').value.trim(), sub = $('sub').value.trim();
-      if (!text) p.set('text', 'none'); else if (text !== 'Scene Skipped') p.set('text', text);
-      if (sub !== 'Back in a moment') p.set('sub', sub);
+      if (!text) p.push(['text', 'none']); else if (text !== 'Scene Skipped') p.push(['text', text]);
+      if (sub !== 'Back in a moment') p.push(['sub', sub]);
+      if ($('font').value !== 'default') p.push(['font', $('font').value]);
+      if ($('size').value !== '1') p.push(['size', $('size').value]);
       for (const [k, d] of [['c1', '#7b2cff'], ['c2', '#ff2d95'], ['c3', '#2d6bff']])
-        if ($(k).value !== d) p.set(k, $(k).value);
-      const qs = p.toString();
+        if ($(k).value !== d) p.push([k, $(k).value]);
+      const qs = p.map(([k, v]) => k + '=' + enc(v)).join('&');
       $('out').value = base + (qs ? '?' + qs : '');
       $('preview').src = base + '?' + qs;
       $('opWrap').style.display = style === 'glass' ? '' : 'none';
       $('opVal').textContent = $('op').value;
+      $('sizeVal').textContent = $('size').value + 'x';
       document.querySelectorAll('.styles button').forEach(b => b.classList.toggle('active', b.dataset.style === style));
     };
 
     document.querySelectorAll('.styles button').forEach(b => b.onclick = () => { style = b.dataset.style; update(); });
-    ['op', 'text', 'sub', 'c1', 'c2', 'c3'].forEach(id => $(id).addEventListener('input', update));
+    ['op', 'text', 'sub', 'font', 'size', 'c1', 'c2', 'c3'].forEach(id => $(id).addEventListener('input', update));
     $('copy').onclick = async () => {
       try { await navigator.clipboard.writeText($('out').value); } catch { $('out').select(); document.execCommand('copy'); }
       $('copy').textContent = 'Copied!'; setTimeout(() => $('copy').textContent = 'Copy link', 1200);
